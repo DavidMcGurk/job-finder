@@ -64,7 +64,10 @@ def parse_adzuna_job(raw: dict, country: str = "gb") -> Job | None:
             location_parts = [str(a) for a in area if a]
     location = ", ".join(location_parts) if location_parts else (str(loc) if loc else "")
     company_raw = raw.get("company", {})
-    company = company_raw.get("displayname", "") if isinstance(company_raw, dict) else str(company_raw or "")
+    if isinstance(company_raw, dict):
+        company = company_raw.get("display_name", "") or company_raw.get("displayname", "")
+    else:
+        company = str(company_raw or "")
     return Job(
         id=job_id,
         source=f"adzuna:{country}",

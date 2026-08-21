@@ -58,7 +58,7 @@ candidate:
 
 matching:
   model: sentence-transformers/all-MiniLM-L6-v2
-  minimum_score: 0.55
+  minimum_score: 0.50
   top_n: 20
   weights:
     semantic: 0.50

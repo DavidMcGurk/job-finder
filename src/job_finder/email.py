@@ -56,7 +56,12 @@ def format_salary(job: Job) -> str:
 def generate_html_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
     """Generate the HTML body for the job digest email."""
     parts = ['<html><body style="font-family: Arial, sans-serif; ' 'color: #333; max-width: 600px; margin: 0 auto;">']
-    parts.append("<h2>Job Finder — Weekly Digest</h2>")
+    parts.append(
+        '<div style="background-color: #1a365d; color: #fff; padding: 16px 20px; '
+        'border-radius: 6px 6px 0 0; margin-bottom: 20px;">'
+        '<h2 style="margin: 0;">Job Finder — Weekly Digest</h2>'
+        "</div>"
+    )
     count = len(scored_jobs)
     if count == 0:
         parts.append("<p>No new jobs found matching your criteria this week.</p>")
@@ -68,6 +73,11 @@ def generate_html_email(scored_jobs: list[ScoredJob], total_below_threshold: int
         parts.append(
             f"<hr><p><em>Additional matches: {total_below_threshold} " "jobs below the email threshold.</em></p>"
         )
+    parts.append(
+        '<div style="background-color: #1a365d; color: #fff; padding: 10px 20px; '
+        "border-radius: 0 0 6px 6px; margin-top: 24px; text-align: center; "
+        'font-size: 12px;">Job Finder</div>'
+    )
     parts.append("</body></html>")
     return "\n".join(parts)
 
@@ -82,8 +92,12 @@ def _render_job_html(index: int, scored: ScoredJob) -> str:
     rating = match_rating(scored.final_score)
     color = rating_color(scored.final_score)
 
-    parts = ['<div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;">']
-    parts.append(f'<h3 style="margin: 0 0 4px 0;">{index}. {title}</h3>')
+    parts = [
+        '<div style="margin-bottom: 20px; padding: 16px 20px; '
+        "background-color: #f9fafb; border-left: 4px solid #1a365d; "
+        'border-radius: 0 4px 4px 0;">'
+    ]
+    parts.append(f'<h3 style="margin: 0 0 6px 0; color: #1a365d;">{index}. {title}</h3>')
     parts.append(
         f'<p style="margin: 2px 0;">'
         f'<span style="background-color: {color}; color: #fff; padding: 2px 10px; '

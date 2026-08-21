@@ -84,6 +84,18 @@ class TestParseAdzunaJob:
         assert job is not None
         assert job.company == "Acme Inc"
 
+    def test_handles_display_name_with_underscore(self) -> None:
+        raw = {"id": "1", "title": "Dev", "company": {"display_name": "Acme Inc"}}
+        job = parse_adzuna_job(raw)
+        assert job is not None
+        assert job.company == "Acme Inc"
+
+    def test_handles_empty_company(self) -> None:
+        raw = {"id": "1", "title": "Dev", "company": {}}
+        job = parse_adzuna_job(raw)
+        assert job is not None
+        assert job.company == ""
+
     def test_handles_non_dict_location(self) -> None:
         raw = {"id": "1", "title": "Dev", "location": "Remote"}
         job = parse_adzuna_job(raw)
