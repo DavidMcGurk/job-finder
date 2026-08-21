@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from job_finder.email import format_salary, generate_html_email, generate_text_email, match_rating
+from job_finder.email import format_salary, generate_html_email, generate_text_email, match_rating, rating_color
 from job_finder.models import ComponentScores, Job, ScoredJob
 
 
@@ -42,10 +42,10 @@ class TestHtmlEmail:
         html = generate_html_email(scored)
         assert "<html>" in html
         assert "</html>" in html
-        assert "Job Finder — Daily Digest" in html
+        assert "Job Finder — Weekly Digest" in html
         assert "ML Engineer" in html
         assert "Example Corp" in html
-        assert "Very strong match" in html
+        assert "Very strong" in html
 
     def test_contains_strengths_and_concerns(self) -> None:
         scored = [_make_scored(_make_job())]
@@ -113,10 +113,10 @@ class TestTextEmail:
     def test_generates_text(self) -> None:
         scored = [_make_scored(_make_job())]
         text = generate_text_email(scored)
-        assert "Job Finder — Daily Digest" in text
+        assert "Job Finder — Weekly Digest" in text
         assert "ML Engineer" in text
         assert "Example Corp" in text
-        assert "Very strong match" in text
+        assert "Very strong" in text
         assert "View job" in text or "https://example.com/job/1" in text
 
     def test_text_strengths_and_concerns(self) -> None:
@@ -139,25 +139,47 @@ class TestTextEmail:
 
 class TestMatchRating:
     def test_very_strong(self) -> None:
-        assert match_rating(70) == "Very strong match"
-        assert match_rating(85) == "Very strong match"
-        assert match_rating(100) == "Very strong match"
+        assert match_rating(70) == "Very strong"
+        assert match_rating(85) == "Very strong"
+        assert match_rating(100) == "Very strong"
 
     def test_strong(self) -> None:
-        assert match_rating(65) == "Strong match"
-        assert match_rating(69) == "Strong match"
+        assert match_rating(65) == "Strong"
+        assert match_rating(69) == "Strong"
 
     def test_good(self) -> None:
-        assert match_rating(60) == "Good match"
-        assert match_rating(64) == "Good match"
+        assert match_rating(60) == "Good"
+        assert match_rating(64) == "Good"
 
     def test_fair(self) -> None:
-        assert match_rating(55) == "Fair match"
-        assert match_rating(59) == "Fair match"
+        assert match_rating(55) == "Fair"
+        assert match_rating(59) == "Fair"
 
     def test_weak(self) -> None:
-        assert match_rating(54) == "Weak match"
-        assert match_rating(0) == "Weak match"
+        assert match_rating(54) == "Weak"
+        assert match_rating(0) == "Weak"
+
+
+class TestRatingColor:
+    def test_very_strong_green(self) -> None:
+        assert rating_color(70) == "#2e7d32"
+        assert rating_color(100) == "#2e7d32"
+
+    def test_strong_teal(self) -> None:
+        assert rating_color(65) == "#00695c"
+        assert rating_color(69) == "#00695c"
+
+    def test_good_blue(self) -> None:
+        assert rating_color(60) == "#1565c0"
+        assert rating_color(64) == "#1565c0"
+
+    def test_fair_orange(self) -> None:
+        assert rating_color(55) == "#e65100"
+        assert rating_color(59) == "#e65100"
+
+    def test_weak_grey(self) -> None:
+        assert rating_color(54) == "#757575"
+        assert rating_color(0) == "#757575"
 
 
 class TestFormatSalary:

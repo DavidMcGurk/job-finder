@@ -177,8 +177,10 @@ def _print_results(scored: list[ScoredJob]) -> None:
     print(f"\nTop {len(scored)} job matches:")
     print("=" * 60)
     for i, s in enumerate(scored, 1):
-        print(f"\n{i}. {s.job.title} — {s.job.company}".rstrip(" —"))
-        print(f"   Match: {match_rating(s.final_score)}")
+        print(f"\n{i}. {s.job.title}")
+        print(f"   {match_rating(s.final_score)}")
+        if s.job.company:
+            print(f"   Company: {s.job.company}")
         salary = format_salary(s.job)
         if salary:
             print(f"   Salary: {salary}")

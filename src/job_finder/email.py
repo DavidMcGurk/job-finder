@@ -19,14 +19,27 @@ logger = logging.getLogger(__name__)
 def match_rating(score: float) -> str:
     """Convert a numeric score (0–100) into a qualitative rating label."""
     if score >= 70:
-        return "Very strong match"
+        return "Very strong"
     if score >= 65:
-        return "Strong match"
+        return "Strong"
     if score >= 60:
-        return "Good match"
+        return "Good"
     if score >= 55:
-        return "Fair match"
-    return "Weak match"
+        return "Fair"
+    return "Weak"
+
+
+def rating_color(score: float) -> str:
+    """Return a hex colour for a given match score."""
+    if score >= 70:
+        return "#2e7d32"  # dark green
+    if score >= 65:
+        return "#00695c"  # teal
+    if score >= 60:
+        return "#1565c0"  # blue
+    if score >= 55:
+        return "#e65100"  # dark orange
+    return "#757575"  # grey
 
 
 def format_salary(job: Job) -> str:
@@ -43,10 +56,10 @@ def format_salary(job: Job) -> str:
 def generate_html_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
     """Generate the HTML body for the job digest email."""
     parts = ['<html><body style="font-family: Arial, sans-serif; ' 'color: #333; max-width: 600px; margin: 0 auto;">']
-    parts.append("<h2>Job Finder — Daily Digest</h2>")
+    parts.append("<h2>Job Finder — Weekly Digest</h2>")
     count = len(scored_jobs)
     if count == 0:
-        parts.append("<p>No new jobs found matching your criteria today.</p>")
+        parts.append("<p>No new jobs found matching your criteria this week.</p>")
     else:
         parts.append(f"<p>Found <strong>{count}</strong> new job" f"{'s' if count != 1 else ''}.</p>")
     for i, scored in enumerate(scored_jobs, 1):
@@ -66,15 +79,24 @@ def _render_job_html(index: int, scored: ScoredJob) -> str:
     company = escape(job.company)
     location = escape(job.location) if job.location else ""
     url = job.url if is_valid_url(job.url) else ""
+    rating = match_rating(scored.final_score)
+    color = rating_color(scored.final_score)
 
     parts = ['<div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;">']
-    parts.append(f'<h3 style="margin: 0 0 4px 0;">{index}. {title}' f"{' — ' + company if company else ''}</h3>")
-    parts.append(f'<p style="margin: 2px 0;"><strong>Match:</strong> {match_rating(scored.final_score)}</p>')
+    parts.append(f'<h3 style="margin: 0 0 4px 0;">{index}. {title}</h3>')
+    parts.append(
+        f'<p style="margin: 2px 0;">'
+        f'<span style="background-color: {color}; color: #fff; padding: 2px 10px; '
+        f'border-radius: 4px; font-size: 13px; font-weight: bold;">{escape(rating)}</span>'
+        f"</p>"
+    )
+    if company:
+        parts.append(f'<p style="margin: 2px 0; color: #555;"><strong>Company:</strong> {company}</p>')
     salary = format_salary(job)
     if salary:
-        parts.append(f'<p style="margin: 2px 0;"><strong>Salary:</strong> {escape(salary)}</p>')
+        parts.append(f'<p style="margin: 2px 0; color: #2e7d32;"><strong>Salary:</strong> {escape(salary)}</p>')
     if location:
-        parts.append(f'<p style="margin: 2px 0;"><strong>Location:</strong> {location}</p>')
+        parts.append(f'<p style="margin: 2px 0; color: #555;"><strong>Location:</strong> {location}</p>')
     if scored.strengths:
         parts.append('<p style="margin: 8px 0 2px 0;"><strong>Why it matches:</strong></p><ul>')
         for s in scored.strengths:
@@ -93,10 +115,10 @@ def _render_job_html(index: int, scored: ScoredJob) -> str:
 
 def generate_text_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
     """Generate a plain-text alternative for the job digest email."""
-    lines = ["Job Finder — Daily Digest", "=" * 40, ""]
+    lines = ["Job Finder — Weekly Digest", "=" * 40, ""]
     count = len(scored_jobs)
     if count == 0:
-        lines.append("No new jobs found matching your criteria today.")
+        lines.append("No new jobs found matching your criteria this week.")
     else:
         lines.append(f"Found {count} new job{'s' if count != 1 else ''}.")
     lines.append("")
@@ -112,9 +134,11 @@ def _render_job_text(index: int, scored: ScoredJob) -> str:
     """Render a single job as plain text."""
     job = scored.job
     lines = [
-        f"{index}. {job.title} — {job.company}".rstrip(" —"),
-        f"   Match: {match_rating(scored.final_score)}",
+        f"{index}. {job.title}",
+        f"   {match_rating(scored.final_score)}",
     ]
+    if job.company:
+        lines.append(f"   Company: {job.company}")
     salary = format_salary(job)
     if salary:
         lines.append(f"   Salary: {salary}")
@@ -141,7 +165,7 @@ def build_message(
 ) -> MIMEMultipart:
     """Build a MIME multipart message with HTML and plain-text alternatives."""
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Job Finder — Daily Digest"
+    msg["Subject"] = "Job Finder — Weekly Digest"
     msg["From"] = config.email_from
     msg["To"] = config.email_to
     msg.attach(MIMEText(text_body, "plain", "utf-8"))

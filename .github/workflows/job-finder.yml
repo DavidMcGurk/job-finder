@@ -3,8 +3,8 @@ name: Job Finder
 on:
   workflow_dispatch:
   schedule:
-    # Run every 2 days at 08:00 UTC
-    - cron: "0 8 */2 * *"
+    # Run weekly on Mondays at 08:00 UTC
+    - cron: "0 8 * * 1"
 
 permissions:
   contents: write

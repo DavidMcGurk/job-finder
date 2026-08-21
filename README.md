@@ -166,7 +166,7 @@ export JOB_FINDER_CONFIG="/path/to/config.yaml"
 2. Create a new application to get your `app_id` and `app_key`
 3. Set them as environment variables (`ADZUNA_APP_ID` and `ADZUNA_APP_KEY`)
 
-The free tier provides sufficient API calls for personal daily job searches.
+The free tier provides sufficient API calls for personal weekly job searches.
 
 ### 4. Configure your candidate profile
 
@@ -277,7 +277,7 @@ export EMAIL_TO="your_email@gmail.com"
 
 ## GitHub Actions
 
-The workflow in [.github/workflows/job-finder.yml](.github/workflows/job-finder.yml) runs the job finder daily on a cron schedule. **This is designed to run in your private fork**, where your real `config/config.yaml` and `config/cv.pdf` are committed.
+The workflow in [.github/workflows/job-finder.yml](.github/workflows/job-finder.yml) runs the job finder weekly on a cron schedule. **This is designed to run in your private fork**, where your real `config/config.yaml` and `config/cv.pdf` are committed.
 
 ### Configure GitHub Actions secrets
 
@@ -296,7 +296,7 @@ Go to your **private** repository → Settings → Secrets and variables → Act
 
 ### Scheduled execution
 
-The workflow runs on `workflow_dispatch` (manual trigger) and on a cron schedule (`0 8 * * *` — daily at 08:00 UTC). Edit the cron expression in the workflow file to change the schedule.
+The workflow runs on `workflow_dispatch` (manual trigger) and on a cron schedule (`0 8 * * 1` — weekly on Mondays at 08:00 UTC). Edit the cron expression in the workflow file to change the schedule.
 
 ### State persistence
 
