@@ -1,0 +1,63 @@
+adzuna:
+  country: gb
+  results_per_query: 50
+  max_age_days: 7
+  queries:
+    - machine learning engineer
+    - machine learning scientist
+    - research scientist
+    - computational scientist
+    - scientific software engineer
+
+candidate:
+  name: Example Candidate
+
+  location:
+    countries:
+      - United Kingdom
+    cities:
+      - London
+      - Cambridge
+    remote: true
+
+  titles:
+    - Machine Learning Engineer
+    - Research Scientist
+    - ML Scientist
+    - Computational Scientist
+
+  skills:
+    must_have:
+      - machine learning
+    desirable:
+      - Python
+      - PyTorch
+      - deep learning
+      - scientific computing
+      - numerical modelling
+
+  exclusions:
+    - sales
+    - marketing
+    - director
+    - manager
+
+  cv_path: config/cv.pdf
+
+matching:
+  model: sentence-transformers/all-MiniLM-L6-v2
+  minimum_score: 0.55
+  top_n: 10
+  weights:
+    semantic: 0.50
+    title: 0.20
+    skill: 0.15
+    location: 0.10
+    recency: 0.05
+
+email:
+  enabled: true
+  max_results: 10
+
+database:
+  path: data/job_finder.db

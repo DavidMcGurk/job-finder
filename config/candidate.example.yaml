@@ -1,0 +1,37 @@
+# Example candidate configuration — copy to config.yaml and customise.
+# Do NOT commit real personal data or CVs to the repository.
+
+candidate:
+  name: Example Candidate
+
+  location:
+    countries:
+      - United Kingdom
+    cities:
+      - London
+      - Cambridge
+    remote: true
+
+  titles:
+    - Machine Learning Engineer
+    - Research Scientist
+    - ML Scientist
+    - Computational Scientist
+
+  skills:
+    must_have:
+      - machine learning
+    desirable:
+      - Python
+      - PyTorch
+      - deep learning
+      - scientific computing
+      - numerical modelling
+
+  exclusions:
+    - sales
+    - marketing
+    - director
+    - manager
+
+  cv_path: config/cv.pdf

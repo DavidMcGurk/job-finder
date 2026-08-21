@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+__pycache__
+*.pyc
+.DS_Store
+
+# Intellij
+.idea/
+
+# mypy / pytest caches
+.mypy_cache/
+.pytest_cache/
+
+# Job-finder: real config, CV, and data
+config/config.yaml
+config/candidate.yaml
+config/cv.pdf
+data/
+

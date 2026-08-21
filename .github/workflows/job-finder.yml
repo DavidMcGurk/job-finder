@@ -1,0 +1,59 @@
+name: Job Finder
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 08:00 UTC
+    - cron: "0 8 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  run-job-finder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Restore SQLite database from cache
+        uses: actions/cache@v4
+        with:
+          path: data/job_finder.db
+          key: job-finder-db-${{ github.run_id }}
+          restore-keys: |
+            job-finder-db-
+
+      - name: Run job finder
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          JOB_FINDER_CONFIG: config/config.yaml
+        run: uv run python -m job_finder
+
+      - name: Save SQLite database to cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/job_finder.db
+          key: job-finder-db-${{ github.run_id }}

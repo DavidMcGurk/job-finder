@@ -1,0 +1,28 @@
+[project]
+name = "job-finder"
+version = "0.1.0"
+description = "A free, scheduled job-search and CV-matching system using Adzuna, local embeddings, and deterministic Python matching."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pyyaml>=6.0",
+    "pypdf>=4.0",
+    "sentence-transformers>=3.0",
+    "requests>=2.31",
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.setuptools]
+packages = ["job_finder"]
+package-dir = {"job_finder" = "./src/job_finder"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
