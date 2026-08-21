@@ -176,7 +176,7 @@ def location_compatibility(
     """Compute location compatibility score in [0, 1].
 
     - Exact city match: 1.0
-    - Acceptable area match (e.g. Home Counties): 0.9
+    - Acceptable area match (e.g. Home Counties): 0.8
     - Country match: 0.7
     - Remote job and candidate open to remote: 0.8
     - Unknown location: 0.5 (never reject solely on uncertainty)
@@ -198,7 +198,7 @@ def location_compatibility(
     if acceptable_areas:
         for area in acceptable_areas:
             if area.lower() in loc_lower:
-                return 0.9
+                return 0.8
 
     # Check country match
     for country in countries:

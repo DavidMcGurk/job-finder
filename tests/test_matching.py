@@ -130,7 +130,7 @@ class TestLocationCompatibility:
 
     def test_acceptable_area_match(self) -> None:
         score = location_compatibility("Surrey, UK", ["UK"], ["London"], True, acceptable_areas=["Surrey", "Kent"])
-        assert score == 0.9
+        assert score == 0.8
 
     def test_non_acceptable_area(self) -> None:
         score = location_compatibility("Manchester, UK", ["UK"], ["London"], True, acceptable_areas=["Surrey", "Kent"])

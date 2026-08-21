@@ -28,7 +28,7 @@ candidate:
     remote: true
     # Areas within acceptable commuting distance. Non-remote jobs outside
     # these areas (and not in the cities above) are filtered out when
-    # strict: true. Leave empty or omit to disable.
+    # strict: true. Score 0.8. Leave empty or omit to disable.
     acceptable_areas:
       - Surrey
       - Kent
