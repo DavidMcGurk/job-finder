@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from job_finder.email import generate_html_email, generate_text_email
+from job_finder.email import format_salary, generate_html_email, generate_text_email, match_rating
 from job_finder.models import ComponentScores, Job, ScoredJob
 
 
@@ -45,7 +45,7 @@ class TestHtmlEmail:
         assert "Job Finder — Daily Digest" in html
         assert "ML Engineer" in html
         assert "Example Corp" in html
-        assert "87/100" in html
+        assert "Very strong match" in html
 
     def test_contains_strengths_and_concerns(self) -> None:
         scored = [_make_scored(_make_job())]
@@ -116,7 +116,7 @@ class TestTextEmail:
         assert "Job Finder — Daily Digest" in text
         assert "ML Engineer" in text
         assert "Example Corp" in text
-        assert "87/100" in text
+        assert "Very strong match" in text
         assert "View job" in text or "https://example.com/job/1" in text
 
     def test_text_strengths_and_concerns(self) -> None:
@@ -135,3 +135,78 @@ class TestTextEmail:
         text = generate_text_email([_make_scored(_make_job())], total_below_threshold=3)
         assert "3" in text
         assert "below the email threshold" in text
+
+
+class TestMatchRating:
+    def test_very_strong(self) -> None:
+        assert match_rating(70) == "Very strong match"
+        assert match_rating(85) == "Very strong match"
+        assert match_rating(100) == "Very strong match"
+
+    def test_strong(self) -> None:
+        assert match_rating(65) == "Strong match"
+        assert match_rating(69) == "Strong match"
+
+    def test_good(self) -> None:
+        assert match_rating(60) == "Good match"
+        assert match_rating(64) == "Good match"
+
+    def test_fair(self) -> None:
+        assert match_rating(55) == "Fair match"
+        assert match_rating(59) == "Fair match"
+
+    def test_weak(self) -> None:
+        assert match_rating(54) == "Weak match"
+        assert match_rating(0) == "Weak match"
+
+
+class TestFormatSalary:
+    def test_both_min_and_max(self) -> None:
+        job = _make_job()
+        job = Job(
+            id=job.id,
+            source=job.source,
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            description=job.description,
+            url=job.url,
+            created_at=job.created_at,
+            salary_min=30000,
+            salary_max=45000,
+        )
+        assert format_salary(job) == "£30,000–£45,000"
+
+    def test_only_min(self) -> None:
+        job = _make_job()
+        job = Job(
+            id=job.id,
+            source=job.source,
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            description=job.description,
+            url=job.url,
+            created_at=job.created_at,
+            salary_min=35000,
+        )
+        assert format_salary(job) == "£35,000"
+
+    def test_only_max(self) -> None:
+        job = _make_job()
+        job = Job(
+            id=job.id,
+            source=job.source,
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            description=job.description,
+            url=job.url,
+            created_at=job.created_at,
+            salary_max=50000,
+        )
+        assert format_salary(job) == "up to £50,000"
+
+    def test_no_salary(self) -> None:
+        job = _make_job()
+        assert format_salary(job) == ""

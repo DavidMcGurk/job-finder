@@ -59,7 +59,7 @@ candidate:
 matching:
   model: sentence-transformers/all-MiniLM-L6-v2
   minimum_score: 0.55
-  top_n: 10
+  top_n: 5
   weights:
     semantic: 0.50
     title: 0.20
@@ -69,7 +69,7 @@ matching:
 
 email:
   enabled: true
-  max_results: 10
+  max_results: 5
 
 database:
   path: data/job_finder.db

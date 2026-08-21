@@ -11,14 +11,33 @@ from html import escape
 
 from job_finder.config import EmailConfig
 from job_finder.matching import is_valid_url
-from job_finder.models import ScoredJob
+from job_finder.models import Job, ScoredJob
 
 logger = logging.getLogger(__name__)
 
 
-def _format_score(score: float) -> str:
-    """Format a score for display."""
-    return f"{score:.0f}/100"
+def match_rating(score: float) -> str:
+    """Convert a numeric score (0–100) into a qualitative rating label."""
+    if score >= 70:
+        return "Very strong match"
+    if score >= 65:
+        return "Strong match"
+    if score >= 60:
+        return "Good match"
+    if score >= 55:
+        return "Fair match"
+    return "Weak match"
+
+
+def format_salary(job: Job) -> str:
+    """Format salary range for display, if available."""
+    if job.salary_min is not None and job.salary_max is not None:
+        return f"£{job.salary_min:,.0f}–£{job.salary_max:,.0f}"
+    if job.salary_min is not None:
+        return f"£{job.salary_min:,.0f}"
+    if job.salary_max is not None:
+        return f"up to £{job.salary_max:,.0f}"
+    return ""
 
 
 def generate_html_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
@@ -46,12 +65,14 @@ def _render_job_html(index: int, scored: ScoredJob) -> str:
     title = escape(job.title)
     company = escape(job.company)
     location = escape(job.location) if job.location else ""
-    score = _format_score(scored.final_score)
     url = job.url if is_valid_url(job.url) else ""
 
     parts = ['<div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;">']
     parts.append(f'<h3 style="margin: 0 0 4px 0;">{index}. {title}' f"{' — ' + company if company else ''}</h3>")
-    parts.append(f'<p style="margin: 2px 0;"><strong>Score:</strong> {score}</p>')
+    parts.append(f'<p style="margin: 2px 0;"><strong>Match:</strong> {match_rating(scored.final_score)}</p>')
+    salary = format_salary(job)
+    if salary:
+        parts.append(f'<p style="margin: 2px 0;"><strong>Salary:</strong> {escape(salary)}</p>')
     if location:
         parts.append(f'<p style="margin: 2px 0;"><strong>Location:</strong> {location}</p>')
     if scored.strengths:
@@ -92,8 +113,11 @@ def _render_job_text(index: int, scored: ScoredJob) -> str:
     job = scored.job
     lines = [
         f"{index}. {job.title} — {job.company}".rstrip(" —"),
-        f"   Score: {_format_score(scored.final_score)}",
+        f"   Match: {match_rating(scored.final_score)}",
     ]
+    salary = format_salary(job)
+    if salary:
+        lines.append(f"   Salary: {salary}")
     if job.location:
         lines.append(f"   Location: {job.location}")
     if scored.strengths:

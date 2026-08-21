@@ -9,7 +9,13 @@ from job_finder.config import AppConfig
 from job_finder.cv import build_candidate_text, extract_cv_text
 from job_finder.database import JobDatabase
 from job_finder.embeddings import Embedder, cosine_similarity_matrix, normalise_cosine
-from job_finder.email import generate_html_email, generate_text_email, send_email
+from job_finder.email import (
+    format_salary,
+    generate_html_email,
+    generate_text_email,
+    match_rating,
+    send_email,
+)
 from job_finder.matching import is_excluded, is_senior_excluded
 from job_finder.models import Job, ScoredJob
 from job_finder.ranking import rank_jobs
@@ -172,7 +178,10 @@ def _print_results(scored: list[ScoredJob]) -> None:
     print("=" * 60)
     for i, s in enumerate(scored, 1):
         print(f"\n{i}. {s.job.title} — {s.job.company}".rstrip(" —"))
-        print(f"   Score: {s.final_score:.0f}/100")
+        print(f"   Match: {match_rating(s.final_score)}")
+        salary = format_salary(s.job)
+        if salary:
+            print(f"   Salary: {salary}")
         if s.job.location:
             print(f"   Location: {s.job.location}")
         if s.strengths:
