@@ -26,6 +26,15 @@ candidate:
       - London
       - Cambridge
     remote: true
+    # Areas within acceptable commuting distance. Non-remote jobs outside
+    # these areas (and not in the cities above) are filtered out when
+    # strict: true. Leave empty or omit to disable.
+    acceptable_areas:
+      - Surrey
+      - Kent
+    # When true, non-remote jobs outside the cities and acceptable_areas
+    # are hard-filtered out. Set to false for a softer location score.
+    strict: false
 
   titles:
     - Machine Learning Engineer
@@ -50,9 +59,12 @@ candidate:
     - manager
 
   # Set to false to disable automatic filtering of senior leadership titles
-  # (director, head of, VP, chief, CTO, CIO). Useful in fields where those
-  # terms appear in relevant job titles. Default: true.
+  # (director, head of, VP, chief, CTO, CIO, principal, lead, executive).
+  # Default: true.
   seniority_filter: true
+  # Filter out jobs requiring more than this many years of experience.
+  # Set to null or omit to disable experience-based filtering.
+  max_years_experience: 5
 
   cv_path: config/cv.pdf
 

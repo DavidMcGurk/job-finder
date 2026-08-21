@@ -128,6 +128,14 @@ class TestLocationCompatibility:
         score = location_compatibility("Remote", ["UK"], ["London"], False)
         assert score == 0.5
 
+    def test_acceptable_area_match(self) -> None:
+        score = location_compatibility("Surrey, UK", ["UK"], ["London"], True, acceptable_areas=["Surrey", "Kent"])
+        assert score == 0.9
+
+    def test_non_acceptable_area(self) -> None:
+        score = location_compatibility("Manchester, UK", ["UK"], ["London"], True, acceptable_areas=["Surrey", "Kent"])
+        assert score == 0.7
+
 
 class TestExclusionFilter:
     def test_excludes_by_word(self) -> None:
@@ -167,6 +175,55 @@ class TestSeniorExclusion:
     def test_excludes_vp(self) -> None:
         job = _make_job("VP of Engineering")
         assert is_senior_excluded(job) is True
+
+    def test_excludes_principal(self) -> None:
+        job = _make_job("Principal Scientist")
+        assert is_senior_excluded(job) is True
+
+    def test_excludes_lead(self) -> None:
+        job = _make_job("Lead Researcher")
+        assert is_senior_excluded(job) is True
+
+
+class TestExperienceExtraction:
+    def test_extracts_years(self) -> None:
+        from job_finder.matching import extract_years_required
+
+        assert extract_years_required("Requires 5+ years of experience") == 5
+
+    def test_extracts_years_no_plus(self) -> None:
+        from job_finder.matching import extract_years_required
+
+        assert extract_years_required("Minimum 3 years experience required") == 3
+
+    def test_extracts_highest_years(self) -> None:
+        from job_finder.matching import extract_years_required
+
+        desc = "We need someone with 3 years experience, ideally 7 years of professional experience"
+        assert extract_years_required(desc) == 7
+
+    def test_no_years_mentioned(self) -> None:
+        from job_finder.matching import extract_years_required
+
+        assert extract_years_required("We are looking for a researcher") is None
+
+    def test_is_experience_excluded(self) -> None:
+        from job_finder.matching import is_experience_excluded
+
+        job = _make_job("Researcher", description="Requires 9+ years of experience")
+        assert is_experience_excluded(job, max_years=5) is True
+
+    def test_is_experience_not_excluded(self) -> None:
+        from job_finder.matching import is_experience_excluded
+
+        job = _make_job("Researcher", description="Requires 3 years experience")
+        assert is_experience_excluded(job, max_years=5) is False
+
+    def test_is_experience_not_excluded_no_mention(self) -> None:
+        from job_finder.matching import is_experience_excluded
+
+        job = _make_job("Researcher", description="Great team environment")
+        assert is_experience_excluded(job, max_years=5) is False
 
 
 class TestRecencyScore:

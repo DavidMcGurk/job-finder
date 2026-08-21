@@ -7,7 +7,9 @@ import logging
 from job_finder.config import CandidateConfig, MatchingConfig, MatchingWeights
 from job_finder.matching import (
     SkillMatchResult,
+    extract_years_required,
     is_excluded,
+    is_experience_excluded,
     is_senior_excluded,
     location_compatibility,
     match_skills,
@@ -32,7 +34,13 @@ def compute_component_scores(
     title_score = title_similarity(job.title, candidate.titles)
     skill_result = match_skills(job, candidate.must_have_skills, candidate.desirable_skills)
     loc = candidate.location
-    loc_score = location_compatibility(job.location, loc.countries, loc.cities, loc.remote)
+    loc_score = location_compatibility(
+        job.location,
+        loc.countries,
+        loc.cities,
+        loc.remote,
+        loc.acceptable_areas,
+    )
     recency = recency_score(job.created_at, max_age_days)
     components = ComponentScores(
         semantic=semantic_score,
@@ -103,6 +111,12 @@ def build_explanation(
     elif components.recency < 0.3:
         concerns.append("Listing may be older")
 
+    # Experience requirement
+    if candidate.max_years_experience is not None:
+        required = extract_years_required(job.description)
+        if required is not None and required > candidate.max_years_experience:
+            concerns.append(f"Requires {required}+ years experience (candidate has ~{candidate.max_years_experience})")
+
     return strengths, concerns
 
 
@@ -125,6 +139,9 @@ def rank_jobs(
         if candidate.seniority_filter and is_senior_excluded(job):
             logger.debug("Excluded (senior): %s — %s", job.title, job.company)
             continue
+        if candidate.max_years_experience is not None and is_experience_excluded(job, candidate.max_years_experience):
+            logger.debug("Excluded (experience): %s — %s", job.title, job.company)
+            continue
 
         sem = semantic_scores.get(job.id, 0.0)
         components, skill_result = compute_component_scores(job, candidate, sem, matching_config.max_age_days)
@@ -132,6 +149,11 @@ def rank_jobs(
         min_score_100 = matching_config.minimum_score * 100
         if final < min_score_100:
             logger.debug("Below threshold (%.1f < %.1f): %s", final, min_score_100, job.title)
+            continue
+
+        # Strict location filter: reject non-remote jobs outside acceptable areas
+        if candidate.location.strict and components.location < 0.8:
+            logger.debug("Excluded (location strict): %s — %s", job.title, job.company)
             continue
 
         strengths, concerns = build_explanation(job, components, skill_result, candidate)

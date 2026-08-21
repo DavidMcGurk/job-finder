@@ -215,3 +215,76 @@ class TestRankJobs:
         scored = rank_jobs(jobs, candidate, config, semantic)
         assert len(scored) == 1
         assert scored[0].job.id == "2"
+
+    def test_experience_filter_excludes_high_requirement(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            seniority_filter=False,
+            max_years_experience=5,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", description="Requires 9+ years of experience in research"),
+            _make_job(job_id="2", description="Requires 3 years experience"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 1
+        assert scored[0].job.id == "2"
+
+    def test_experience_filter_none_keeps_all(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            seniority_filter=False,
+            max_years_experience=None,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", description="Requires 15+ years of experience"),
+            _make_job(job_id="2", description="Entry level role"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 2
+
+    def test_strict_location_excludes_non_local(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(
+                countries=["UK"],
+                cities=["London"],
+                remote=True,
+                acceptable_areas=["Surrey", "Kent"],
+                strict=True,
+            ),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            seniority_filter=False,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", location="London, UK", description="Research role"),
+            _make_job(job_id="2", location="Remote", description="Research role"),
+            _make_job(job_id="3", location="Manchester, UK", description="Research role"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9, "3": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        ids = {s.job.id for s in scored}
+        assert "1" in ids  # London — city match
+        assert "2" in ids  # Remote — remote match
+        assert "3" not in ids  # Manchester — not acceptable, filtered out

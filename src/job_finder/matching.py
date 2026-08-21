@@ -37,7 +37,40 @@ SENIOR_EXCLUSION_TERMS = {
     "chief",
     "cto",
     "cio",
+    "principal",
+    "lead",
+    "senior manager",
+    "senior director",
+    "executive",
 }
+
+# Regex to extract years-of-experience requirements from job descriptions.
+# Matches patterns like "5+ years", "3 years experience", "minimum 7 years".
+_YEARS_RE = re.compile(
+    r"(?:minimum\s+|at least\s+|require[ds]?\s+|need[s]?\s+)?"
+    r"(\d+)\s*\+?\s*years?\s+(?:of\s+)?(?:experience|exp|professional)",
+    re.IGNORECASE,
+)
+
+
+def extract_years_required(description: str) -> int | None:
+    """Extract the maximum years-of-experience requirement from a job description.
+
+    Returns the highest number found (jobs often mention multiple), or ``None``
+    if no years requirement is stated.
+    """
+    matches = _YEARS_RE.findall(description)
+    if not matches:
+        return None
+    return max(int(m) for m in matches)
+
+
+def is_experience_excluded(job: Job, max_years: int) -> bool:
+    """Check whether a job requires more years of experience than the candidate has."""
+    required = extract_years_required(job.description)
+    if required is None:
+        return False
+    return required > max_years
 
 
 @dataclass
@@ -133,10 +166,17 @@ def match_skills(job: Job, must_have: list[str], desirable: list[str]) -> SkillM
     )
 
 
-def location_compatibility(job_location: str, countries: list[str], cities: list[str], remote: bool) -> float:
+def location_compatibility(
+    job_location: str,
+    countries: list[str],
+    cities: list[str],
+    remote: bool,
+    acceptable_areas: list[str] | None = None,
+) -> float:
     """Compute location compatibility score in [0, 1].
 
     - Exact city match: 1.0
+    - Acceptable area match (e.g. Home Counties): 0.9
     - Country match: 0.7
     - Remote job and candidate open to remote: 0.8
     - Unknown location: 0.5 (never reject solely on uncertainty)
@@ -153,6 +193,12 @@ def location_compatibility(job_location: str, countries: list[str], cities: list
     for city in cities:
         if city.lower() in loc_lower:
             return 1.0
+
+    # Check acceptable areas (e.g. Home Counties near London)
+    if acceptable_areas:
+        for area in acceptable_areas:
+            if area.lower() in loc_lower:
+                return 0.9
 
     # Check country match
     for country in countries:

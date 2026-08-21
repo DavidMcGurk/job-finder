@@ -31,6 +31,8 @@ class LocationConfig:
     countries: list[str] = field(default_factory=list)
     cities: list[str] = field(default_factory=list)
     remote: bool = False
+    acceptable_areas: list[str] = field(default_factory=list)
+    strict: bool = False
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,7 @@ class CandidateConfig:
     desirable_skills: list[str] = field(default_factory=list)
     exclusions: list[str] = field(default_factory=list)
     seniority_filter: bool = True
+    max_years_experience: int | None = None
     cv_path: str = ""
 
 
@@ -131,6 +134,8 @@ def _build_location_config(raw: dict) -> LocationConfig:
         countries=list(raw.get("countries", [])),
         cities=list(raw.get("cities", [])),
         remote=bool(raw.get("remote", False)),
+        acceptable_areas=list(raw.get("acceptable_areas", [])),
+        strict=bool(raw.get("strict", False)),
     )
 
 
@@ -146,6 +151,9 @@ def _build_candidate_config(raw: dict) -> CandidateConfig:
         desirable_skills=list(skills.get("desirable", [])),
         exclusions=list(raw.get("exclusions", [])),
         seniority_filter=bool(raw.get("seniority_filter", True)),
+        max_years_experience=(
+            int(raw["max_years_experience"]) if raw.get("max_years_experience") is not None else None
+        ),
         cv_path=raw.get("cv_path", ""),
     )
 
