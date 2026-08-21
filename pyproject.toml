@@ -12,10 +12,22 @@ dependencies = [
     "numpy>=1.26",
 ]
 
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "black>=25.0",
+    "flake8>=7.0",
+    "mypy>=1.10",
+    "types-PyYAML>=6.0",
+    "types-requests>=2.31",
 ]
+
+[tool.uv]
+package = true
 
 [tool.setuptools]
 packages = ["job_finder"]
@@ -26,3 +38,6 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[tool.mypy]
+ignore_missing_imports = true

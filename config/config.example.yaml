@@ -1,3 +1,10 @@
+# Example configuration — copy to config.yaml and customise.
+#
+# This file is safe for the public template repo: it contains no personal data.
+# In your private fork, create config/config.yaml with your real details and
+# commit it there (un-ignore it in .gitignore for the private fork only).
+# See README.md → "How this repository is meant to be used".
+
 adzuna:
   country: gb
   results_per_query: 50
@@ -41,6 +48,11 @@ candidate:
     - marketing
     - director
     - manager
+
+  # Set to false to disable automatic filtering of senior leadership titles
+  # (director, head of, VP, chief, CTO, CIO). Useful in fields where those
+  # terms appear in relevant job titles. Default: true.
+  seniority_filter: true
 
   cv_path: config/cv.pdf
 

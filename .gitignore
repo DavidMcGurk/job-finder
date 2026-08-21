@@ -20,8 +20,12 @@ __pycache__
 .pytest_cache/
 
 # Job-finder: real config, CV, and data
+# These are gitignored for the public template. In your private fork, remove
+# these lines so you can commit your real config and CV. See README.md.
 config/config.yaml
 config/candidate.yaml
 config/cv.pdf
 data/
 
+# Build artifacts
+*.egg-info/

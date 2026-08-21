@@ -120,5 +120,5 @@ def _parse_dt(raw: str) -> datetime:
     """Parse an ISO-format datetime stored in the database."""
     try:
         return datetime.fromisoformat(raw)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return datetime.now(tz=timezone.utc)

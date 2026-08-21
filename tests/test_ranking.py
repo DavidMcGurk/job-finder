@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from job_finder.config import CandidateConfig, LocationConfig, MatchingConfig, MatchingWeights
-from job_finder.models import ComponentScores, Job, ScoredJob
+from job_finder.models import ComponentScores, Job
 from job_finder.ranking import (
     build_explanation,
     compute_component_scores,
@@ -47,42 +47,32 @@ def _make_job(
 
 class TestComputeFinalScore:
     def test_perfect_scores(self) -> None:
-        components = ComponentScores(
-            semantic=1.0, title=1.0, skill=1.0, location=1.0, recency=1.0
-        )
+        components = ComponentScores(semantic=1.0, title=1.0, skill=1.0, location=1.0, recency=1.0)
         weights = MatchingWeights()
         score = compute_final_score(components, weights)
         assert score == 100.0
 
     def test_zero_scores(self) -> None:
-        components = ComponentScores(
-            semantic=0.0, title=0.0, skill=0.0, location=0.0, recency=0.0
-        )
+        components = ComponentScores(semantic=0.0, title=0.0, skill=0.0, location=0.0, recency=0.0)
         weights = MatchingWeights()
         score = compute_final_score(components, weights)
         assert score == 0.0
 
     def test_weighted_average(self) -> None:
-        components = ComponentScores(
-            semantic=1.0, title=0.0, skill=0.0, location=0.0, recency=0.0
-        )
+        components = ComponentScores(semantic=1.0, title=0.0, skill=0.0, location=0.0, recency=0.0)
         weights = MatchingWeights()
         score = compute_final_score(components, weights)
         # semantic weight is 0.50 out of total 1.0
         assert score == 50.0
 
     def test_custom_weights(self) -> None:
-        components = ComponentScores(
-            semantic=1.0, title=0.0, skill=0.0, location=0.0, recency=0.0
-        )
+        components = ComponentScores(semantic=1.0, title=0.0, skill=0.0, location=0.0, recency=0.0)
         weights = MatchingWeights(semantic=1.0, title=0.0, skill=0.0, location=0.0, recency=0.0)
         score = compute_final_score(components, weights)
         assert score == 100.0
 
     def test_zero_weights(self) -> None:
-        components = ComponentScores(
-            semantic=1.0, title=1.0, skill=1.0, location=1.0, recency=1.0
-        )
+        components = ComponentScores(semantic=1.0, title=1.0, skill=1.0, location=1.0, recency=1.0)
         weights = MatchingWeights(semantic=0, title=0, skill=0, location=0, recency=0)
         score = compute_final_score(components, weights)
         assert score == 0.0
@@ -106,9 +96,7 @@ class TestBuildExplanation:
     def test_generates_strengths_and_concerns(self) -> None:
         job = _make_job()
         candidate = _make_candidate()
-        components = ComponentScores(
-            semantic=0.9, title=0.8, skill=0.9, location=1.0, recency=0.9
-        )
+        components = ComponentScores(semantic=0.9, title=0.8, skill=0.9, location=1.0, recency=0.9)
         skill_result = SkillMatchResult(
             matched_must_have=["machine learning"],
             matched_desirable=["Python"],
@@ -125,9 +113,7 @@ class TestBuildExplanation:
     def test_generates_concerns_for_low_scores(self) -> None:
         job = _make_job(title="Data Analyst", description="Some role", location="Unknown")
         candidate = _make_candidate()
-        components = ComponentScores(
-            semantic=0.2, title=0.1, skill=0.2, location=0.4, recency=0.2
-        )
+        components = ComponentScores(semantic=0.2, title=0.1, skill=0.2, location=0.4, recency=0.2)
         skill_result = SkillMatchResult(
             matched_must_have=[],
             matched_desirable=[],
@@ -178,8 +164,7 @@ class TestRankJobs:
         # rank_jobs returns all scored jobs; top_n is applied in the pipeline
         candidate = _make_candidate()
         config = MatchingConfig(minimum_score=0.0, top_n=2)
-        jobs = [_make_job(job_id=str(i), description="Machine learning Python PyTorch London")
-                for i in range(5)]
+        jobs = [_make_job(job_id=str(i), description="Machine learning Python PyTorch London") for i in range(5)]
         semantic = {str(i): 0.8 for i in range(5)}
         scored = rank_jobs(jobs, candidate, config, semantic)
         assert len(scored) == 5  # all pass, top_n applied later in pipeline
@@ -189,3 +174,44 @@ class TestRankJobs:
         config = MatchingConfig()
         scored = rank_jobs([], candidate, config, {})
         assert scored == []
+
+    def test_seniority_filter_disabled_keeps_director(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=["sales"],
+            seniority_filter=False,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", title="Director of Research"),
+            _make_job(job_id="2", title="Research Scientist"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 2
+
+    def test_seniority_filter_enabled_excludes_director(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=["sales"],
+            seniority_filter=True,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", title="Director of Research"),
+            _make_job(job_id="2", title="Research Scientist"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 1
+        assert scored[0].job.id == "2"

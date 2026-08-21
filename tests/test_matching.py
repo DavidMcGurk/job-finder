@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from job_finder.matching import (
-    SkillMatchResult,
     is_excluded,
     is_senior_excluded,
     is_valid_url,
@@ -31,21 +30,15 @@ def _make_job(title: str, description: str = "", location: str = "") -> Job:
 
 class TestTitleSimilarity:
     def test_exact_match(self) -> None:
-        score = title_similarity(
-            "Machine Learning Engineer", ["Machine Learning Engineer"]
-        )
+        score = title_similarity("Machine Learning Engineer", ["Machine Learning Engineer"])
         assert score == 1.0
 
     def test_partial_match(self) -> None:
-        score = title_similarity(
-            "Machine Learning Engineer", ["ML Engineer"]
-        )
+        score = title_similarity("Machine Learning Engineer", ["ML Engineer"])
         assert 0.0 < score < 1.0
 
     def test_no_match(self) -> None:
-        score = title_similarity(
-            "Sales Manager", ["Machine Learning Engineer"]
-        )
+        score = title_similarity("Sales Manager", ["Machine Learning Engineer"])
         assert score == 0.0
 
     def test_empty_candidate_titles(self) -> None:

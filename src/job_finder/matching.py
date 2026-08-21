@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from job_finder.config import CandidateConfig
 from job_finder.models import Job
 
 # Common skill aliases for robust matching
@@ -103,9 +102,7 @@ def title_similarity(job_title: str, candidate_titles: list[str]) -> float:
     return best
 
 
-def match_skills(
-    job: Job, must_have: list[str], desirable: list[str]
-) -> SkillMatchResult:
+def match_skills(job: Job, must_have: list[str], desirable: list[str]) -> SkillMatchResult:
     """Match configured skills against the job title and description.
 
     Must-have skills have a stronger effect. If a job description states a
@@ -121,9 +118,7 @@ def match_skills(
     total_desirable = len(desirable) if desirable else 0
 
     must_score = len(matched_must) / total_must if total_must > 0 else 1.0
-    desirable_score = (
-        len(matched_desirable) / total_desirable if total_desirable > 0 else 0.0
-    )
+    desirable_score = len(matched_desirable) / total_desirable if total_desirable > 0 else 0.0
     # Weight must-have at 70%, desirable at 30%
     score = 0.7 * must_score + 0.3 * desirable_score
     # Penalise missing must-have skills
@@ -138,9 +133,7 @@ def match_skills(
     )
 
 
-def location_compatibility(
-    job_location: str, countries: list[str], cities: list[str], remote: bool
-) -> float:
+def location_compatibility(job_location: str, countries: list[str], cities: list[str], remote: bool) -> float:
     """Compute location compatibility score in [0, 1].
 
     - Exact city match: 1.0
@@ -153,9 +146,7 @@ def location_compatibility(
     loc_lower = job_location.lower().strip()
 
     # Check for remote
-    if remote and any(
-        word in loc_lower for word in ("remote", "work from home", "wfh", "anywhere")
-    ):
+    if remote and any(word in loc_lower for word in ("remote", "work from home", "wfh", "anywhere")):
         return 0.8
 
     # Check city match
@@ -232,5 +223,5 @@ def is_valid_url(url: str) -> bool:
     try:
         parsed = urlparse(url)
         return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         return False

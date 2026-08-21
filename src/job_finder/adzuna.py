@@ -31,7 +31,7 @@ def _parse_created_at(raw: str | None) -> datetime | None:
     try:
         # Adzuna returns e.g. "2024-01-15T10:30:00Z"
         return datetime.fromisoformat(raw.replace("Z", "+00:00"))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -41,7 +41,7 @@ def _parse_salary(value: Any) -> float | None:
         return None
     try:
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -64,10 +64,7 @@ def parse_adzuna_job(raw: dict, country: str = "gb") -> Job | None:
             location_parts = [str(a) for a in area if a]
     location = ", ".join(location_parts) if location_parts else (str(loc) if loc else "")
     company_raw = raw.get("company", {})
-    company = (
-        company_raw.get("displayname", "") if isinstance(company_raw, dict) else str(company_raw or "")
-    )
-    salary = raw.get("salary_min") or raw.get("salary_max")
+    company = company_raw.get("displayname", "") if isinstance(company_raw, dict) else str(company_raw or "")
     return Job(
         id=job_id,
         source=f"adzuna:{country}",
@@ -81,9 +78,11 @@ def parse_adzuna_job(raw: dict, country: str = "gb") -> Job | None:
         salary_max=_parse_salary(raw.get("salary_max")),
         contract_type=str(raw.get("contract_type", "")).strip(),
         contract_time=str(raw.get("contract_time", "")).strip(),
-        category=str(raw.get("category", {}).get("label", "")).strip()
-        if isinstance(raw.get("category"), dict)
-        else str(raw.get("category", "")).strip(),
+        category=(
+            str(raw.get("category", {}).get("label", "")).strip()
+            if isinstance(raw.get("category"), dict)
+            else str(raw.get("category", "")).strip()
+        ),
     )
 
 
@@ -137,7 +136,7 @@ class AdzunaClient:
 
     def _fetch_page(self, query: str, page: int, page_size: int) -> list[dict]:
         """Fetch a single page of results with retry logic."""
-        params = {
+        params: dict[str, str | int] = {
             "app_id": self._config.app_id,
             "app_key": self._config.app_key,
             "results_per_page": page_size,
@@ -154,9 +153,7 @@ class AdzunaClient:
                 return data.get("results", [])
             except requests.RequestException as exc:
                 last_error = exc
-                logger.warning(
-                    "Adzuna request failed (attempt %d/%d): %s", attempt, MAX_RETRIES, exc
-                )
+                logger.warning("Adzuna request failed (attempt %d/%d): %s", attempt, MAX_RETRIES, exc)
                 if attempt < MAX_RETRIES:
                     time.sleep(RETRY_BACKOFF * attempt)
         raise AdzunaError(f"Adzuna request failed after {MAX_RETRIES} attempts: {last_error}")

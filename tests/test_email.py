@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from job_finder.email import generate_html_email, generate_text_email
-from job_finder.matching import is_valid_url
 from job_finder.models import ComponentScores, Job, ScoredJob
 
 
@@ -30,9 +29,7 @@ def _make_job(
 def _make_scored(job: Job, score: float = 87.0) -> ScoredJob:
     return ScoredJob(
         job=job,
-        components=ComponentScores(
-            semantic=0.9, title=0.8, skill=0.7, location=1.0, recency=0.9
-        ),
+        components=ComponentScores(semantic=0.9, title=0.8, skill=0.7, location=1.0, recency=0.9),
         final_score=score,
         strengths=["Strong semantic match", "Python appears in the job requirements"],
         concerns=["Kubernetes experience not evident"],

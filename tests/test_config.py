@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
@@ -135,3 +134,19 @@ class TestConfigLoading:
         config_path = _write_config(tmp_path, data)
         with pytest.raises(ConfigError, match="Candidate"):
             load_config(str(config_path))
+
+    def test_seniority_filter_default_true(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        config_path = _write_config(tmp_path, _base_config())
+        config = load_config(str(config_path))
+        assert config.candidate.seniority_filter is True
+
+    def test_seniority_filter_disabled(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        data = _base_config()
+        data["candidate"]["seniority_filter"] = False
+        config_path = _write_config(tmp_path, data)
+        config = load_config(str(config_path))
+        assert config.candidate.seniority_filter is False

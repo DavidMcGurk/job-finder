@@ -68,7 +68,7 @@ class TestParseAdzunaJob:
 
     def test_returns_none_for_empty(self) -> None:
         assert parse_adzuna_job({}) is None
-        assert parse_adzuna_job(None) is None
+        assert parse_adzuna_job(None) is None  # type: ignore[arg-type]
 
     def test_returns_none_without_id(self) -> None:
         raw = {"title": "Engineer"}
@@ -108,10 +108,8 @@ class TestFilterRecent:
         old = datetime(2020, 1, 1, tzinfo=timezone.utc)
         recent = datetime.now(tz=timezone.utc)
         jobs = [
-            Job(id="1", source="adzuna", title="A", company="", location="",
-                description="", url="", created_at=old),
-            Job(id="2", source="adzuna", title="B", company="", location="",
-                description="", url="", created_at=recent),
+            Job(id="1", source="adzuna", title="A", company="", location="", description="", url="", created_at=old),
+            Job(id="2", source="adzuna", title="B", company="", location="", description="", url="", created_at=recent),
         ]
         result = filter_recent(jobs, max_age_days=7)
         assert len(result) == 1
@@ -119,16 +117,23 @@ class TestFilterRecent:
 
     def test_keeps_unknown_age(self) -> None:
         jobs = [
-            Job(id="1", source="adzuna", title="A", company="", location="",
-                description="", url="", created_at=None),
+            Job(id="1", source="adzuna", title="A", company="", location="", description="", url="", created_at=None),
         ]
         result = filter_recent(jobs, max_age_days=7)
         assert len(result) == 1
 
     def test_no_filter_when_zero(self) -> None:
         jobs = [
-            Job(id="1", source="adzuna", title="A", company="", location="",
-                description="", url="", created_at=datetime(2020, 1, 1, tzinfo=timezone.utc)),
+            Job(
+                id="1",
+                source="adzuna",
+                title="A",
+                company="",
+                location="",
+                description="",
+                url="",
+                created_at=datetime(2020, 1, 1, tzinfo=timezone.utc),
+            ),
         ]
         result = filter_recent(jobs, max_age_days=0)
         assert len(result) == 1
@@ -149,19 +154,24 @@ class TestAdzunaClient:
         config = self._config()
         client = AdzunaClient(config)
         # Two pages, each returning the same job
-        with patch.object(client, "_search_query", return_value=[
-            Job(id="1", source="adzuna:gb", title="A", company="", location="",
-                description="", url=""),
-            Job(id="2", source="adzuna:gb", title="B", company="", location="",
-                description="", url=""),
-        ]):
+        with patch.object(
+            client,
+            "_search_query",
+            return_value=[
+                Job(id="1", source="adzuna:gb", title="A", company="", location="", description="", url=""),
+                Job(id="2", source="adzuna:gb", title="B", company="", location="", description="", url=""),
+            ],
+        ):
             jobs = client.search_all()
         assert len(jobs) == 2
 
     def test_search_all_continues_on_error(self) -> None:
         config = AdzunaConfig(
-            app_id="test_id", app_key="test_key", country="gb",
-            results_per_query=5, max_age_days=7,
+            app_id="test_id",
+            app_key="test_key",
+            country="gb",
+            results_per_query=5,
+            max_age_days=7,
             queries=["good query", "bad query"],
         )
         client = AdzunaClient(config)
@@ -171,8 +181,7 @@ class TestAdzunaClient:
             call_count[0] += 1
             if "bad" in query:
                 raise AdzunaError("API error")
-            return [Job(id="1", source="adzuna:gb", title="A", company="",
-                        location="", description="", url="")]
+            return [Job(id="1", source="adzuna:gb", title="A", company="", location="", description="", url="")]
 
         with patch.object(client, "_search_query", side_effect=mock_search):
             jobs = client.search_all()

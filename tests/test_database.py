@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from collections.abc import Generator
+
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -26,9 +28,7 @@ def _make_job(job_id: str = "1") -> Job:
 def _make_scored(job: Job, score: float = 85.0) -> ScoredJob:
     return ScoredJob(
         job=job,
-        components=ComponentScores(
-            semantic=0.9, title=0.8, skill=0.7, location=1.0, recency=0.9
-        ),
+        components=ComponentScores(semantic=0.9, title=0.8, skill=0.7, location=1.0, recency=0.9),
         final_score=score,
         strengths=[],
         concerns=[],
@@ -36,7 +36,7 @@ def _make_scored(job: Job, score: float = 85.0) -> ScoredJob:
 
 
 @pytest.fixture
-def db(tmp_path: Path) -> JobDatabase:
+def db(tmp_path: Path) -> Generator[JobDatabase, None, None]:
     database = JobDatabase(str(tmp_path / "test.db"))
     yield database
     database.close()

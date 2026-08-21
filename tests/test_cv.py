@@ -8,7 +8,6 @@ import pytest
 
 from job_finder.config import CandidateConfig, LocationConfig
 from job_finder.cv import CVError, build_candidate_text, extract_cv_text
-from job_finder.models import Job
 
 
 class TestExtractCvText:
@@ -24,7 +23,6 @@ class TestExtractCvText:
         cv_path = "/tmp/fake_cv.pdf"
         with patch("pathlib.Path.exists", return_value=True):
             with patch("pypdf.PdfReader") as mock_reader:
-                mock_page = patch("pypdf.PdfReader")
                 mock_reader.return_value.pages = [
                     type("Page", (), {"extract_text": lambda self: "Machine Learning Engineer"})()
                 ]
@@ -34,9 +32,7 @@ class TestExtractCvText:
     def test_empty_text_raises(self) -> None:
         with patch("pathlib.Path.exists", return_value=True):
             with patch("pypdf.PdfReader") as mock_reader:
-                mock_reader.return_value.pages = [
-                    type("Page", (), {"extract_text": lambda self: ""})()
-                ]
+                mock_reader.return_value.pages = [type("Page", (), {"extract_text": lambda self: ""})()]
                 with pytest.raises(CVError, match="No text"):
                     extract_cv_text("/tmp/fake.pdf")
 
@@ -45,9 +41,7 @@ class TestBuildCandidateText:
     def test_includes_all_fields(self) -> None:
         candidate = CandidateConfig(
             name="Jane Doe",
-            location=LocationConfig(
-                countries=["UK"], cities=["London", "Cambridge"], remote=True
-            ),
+            location=LocationConfig(countries=["UK"], cities=["London", "Cambridge"], remote=True),
             titles=["ML Engineer", "Research Scientist"],
             must_have_skills=["machine learning"],
             desirable_skills=["Python", "PyTorch"],

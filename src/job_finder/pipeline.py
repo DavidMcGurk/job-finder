@@ -29,14 +29,14 @@ def deduplicate(jobs: list[Job]) -> list[Job]:
 
 
 def hard_filter(jobs: list[Job], config: AppConfig) -> list[Job]:
-    """Apply exclusion and seniority filters before embedding."""
+    """Apply exclusion and (optionally) seniority filters before embedding."""
     candidate = config.candidate
     result: list[Job] = []
     for job in jobs:
         if is_excluded(job, candidate.exclusions):
             logger.debug("Hard-filtered (exclusion): %s", job.title)
             continue
-        if is_senior_excluded(job):
+        if candidate.seniority_filter and is_senior_excluded(job):
             logger.debug("Hard-filtered (senior): %s", job.title)
             continue
         result.append(job)

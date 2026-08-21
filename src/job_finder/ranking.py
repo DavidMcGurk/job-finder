@@ -30,13 +30,9 @@ def compute_component_scores(
     Returns the component scores and the skill match result (for explanation).
     """
     title_score = title_similarity(job.title, candidate.titles)
-    skill_result = match_skills(
-        job, candidate.must_have_skills, candidate.desirable_skills
-    )
+    skill_result = match_skills(job, candidate.must_have_skills, candidate.desirable_skills)
     loc = candidate.location
-    loc_score = location_compatibility(
-        job.location, loc.countries, loc.cities, loc.remote
-    )
+    loc_score = location_compatibility(job.location, loc.countries, loc.cities, loc.remote)
     recency = recency_score(job.created_at, max_age_days)
     components = ComponentScores(
         semantic=semantic_score,
@@ -50,9 +46,7 @@ def compute_component_scores(
 
 def compute_final_score(components: ComponentScores, weights: MatchingWeights) -> float:
     """Compute the weighted final score, normalised to [0, 100]."""
-    total_weight = (
-        weights.semantic + weights.title + weights.skill + weights.location + weights.recency
-    )
+    total_weight = weights.semantic + weights.title + weights.skill + weights.location + weights.recency
     if total_weight <= 0:
         return 0.0
     weighted = (
@@ -85,7 +79,7 @@ def build_explanation(
 
     # Title
     if components.title >= 0.6:
-        strengths.append(f"Title closely matches candidate titles")
+        strengths.append("Title closely matches candidate titles")
     elif components.title < 0.2 and candidate.titles:
         concerns.append("Job title does not closely match candidate titles")
 
@@ -95,9 +89,7 @@ def build_explanation(
     for skill in skill_result.matched_desirable:
         strengths.append(f"{skill.capitalize()} appears in the job requirements")
     for skill in skill_result.missing_must_have:
-        concerns.append(
-            f"Must-have skill '{skill}' not evident in this job description"
-        )
+        concerns.append(f"Must-have skill '{skill}' not evident in this job description")
 
     # Location
     if components.location >= 0.8:
@@ -130,23 +122,19 @@ def rank_jobs(
         if is_excluded(job, candidate.exclusions):
             logger.debug("Excluded (term match): %s — %s", job.title, job.company)
             continue
-        if is_senior_excluded(job):
+        if candidate.seniority_filter and is_senior_excluded(job):
             logger.debug("Excluded (senior): %s — %s", job.title, job.company)
             continue
 
         sem = semantic_scores.get(job.id, 0.0)
-        components, skill_result = compute_component_scores(
-            job, candidate, sem, matching_config.max_age_days
-        )
+        components, skill_result = compute_component_scores(job, candidate, sem, matching_config.max_age_days)
         final = compute_final_score(components, matching_config.weights)
         min_score_100 = matching_config.minimum_score * 100
         if final < min_score_100:
             logger.debug("Below threshold (%.1f < %.1f): %s", final, min_score_100, job.title)
             continue
 
-        strengths, concerns = build_explanation(
-            job, components, skill_result, candidate
-        )
+        strengths, concerns = build_explanation(job, components, skill_result, candidate)
         scored.append(
             ScoredJob(
                 job=job,

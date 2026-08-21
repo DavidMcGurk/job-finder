@@ -43,6 +43,7 @@ class CandidateConfig:
     must_have_skills: list[str] = field(default_factory=list)
     desirable_skills: list[str] = field(default_factory=list)
     exclusions: list[str] = field(default_factory=list)
+    seniority_filter: bool = True
     cv_path: str = ""
 
 
@@ -114,9 +115,7 @@ def _build_adzuna_config(raw: dict) -> AdzunaConfig:
     app_id = _get_env("ADZUNA_APP_ID")
     app_key = _get_env("ADZUNA_APP_KEY")
     if not app_id or not app_key:
-        raise ConfigError(
-            "ADZUNA_APP_ID and ADZUNA_APP_KEY environment variables are required."
-        )
+        raise ConfigError("ADZUNA_APP_ID and ADZUNA_APP_KEY environment variables are required.")
     return AdzunaConfig(
         app_id=app_id,
         app_key=app_key,
@@ -146,6 +145,7 @@ def _build_candidate_config(raw: dict) -> CandidateConfig:
         must_have_skills=list(skills.get("must_have", [])),
         desirable_skills=list(skills.get("desirable", [])),
         exclusions=list(raw.get("exclusions", [])),
+        seniority_filter=bool(raw.get("seniority_filter", True)),
         cv_path=raw.get("cv_path", ""),
     )
 

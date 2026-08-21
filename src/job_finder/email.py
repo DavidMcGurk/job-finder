@@ -21,27 +21,20 @@ def _format_score(score: float) -> str:
     return f"{score:.0f}/100"
 
 
-def generate_html_email(
-    scored_jobs: list[ScoredJob], total_below_threshold: int = 0
-) -> str:
+def generate_html_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
     """Generate the HTML body for the job digest email."""
-    parts = [
-        "<html><body style=\"font-family: Arial, sans-serif; "
-        "color: #333; max-width: 600px; margin: 0 auto;\">"
-    ]
+    parts = ['<html><body style="font-family: Arial, sans-serif; ' 'color: #333; max-width: 600px; margin: 0 auto;">']
     parts.append("<h2>Job Finder — Daily Digest</h2>")
     count = len(scored_jobs)
     if count == 0:
         parts.append("<p>No new jobs found matching your criteria today.</p>")
     else:
-        parts.append(f"<p>Found <strong>{count}</strong> new job"
-                      f"{'s' if count != 1 else ''}.</p>")
+        parts.append(f"<p>Found <strong>{count}</strong> new job" f"{'s' if count != 1 else ''}.</p>")
     for i, scored in enumerate(scored_jobs, 1):
         parts.append(_render_job_html(i, scored))
     if total_below_threshold > 0:
         parts.append(
-            f"<hr><p><em>Additional matches: {total_below_threshold} "
-            "jobs below the email threshold.</em></p>"
+            f"<hr><p><em>Additional matches: {total_below_threshold} " "jobs below the email threshold.</em></p>"
         )
     parts.append("</body></html>")
     return "\n".join(parts)
@@ -56,35 +49,28 @@ def _render_job_html(index: int, scored: ScoredJob) -> str:
     score = _format_score(scored.final_score)
     url = job.url if is_valid_url(job.url) else ""
 
-    parts = [f"<div style=\"margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;\">"]
-    parts.append(
-        f"<h3 style=\"margin: 0 0 4px 0;\">{index}. {title}"
-        f"{' — ' + company if company else ''}</h3>"
-    )
-    parts.append(f"<p style=\"margin: 2px 0;\"><strong>Score:</strong> {score}</p>")
+    parts = ['<div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;">']
+    parts.append(f'<h3 style="margin: 0 0 4px 0;">{index}. {title}' f"{' — ' + company if company else ''}</h3>")
+    parts.append(f'<p style="margin: 2px 0;"><strong>Score:</strong> {score}</p>')
     if location:
-        parts.append(f"<p style=\"margin: 2px 0;\"><strong>Location:</strong> {location}</p>")
+        parts.append(f'<p style="margin: 2px 0;"><strong>Location:</strong> {location}</p>')
     if scored.strengths:
-        parts.append("<p style=\"margin: 8px 0 2px 0;\"><strong>Why it matches:</strong></p><ul>")
+        parts.append('<p style="margin: 8px 0 2px 0;"><strong>Why it matches:</strong></p><ul>')
         for s in scored.strengths:
             parts.append(f"<li>{escape(s)}</li>")
         parts.append("</ul>")
     if scored.concerns:
-        parts.append("<p style=\"margin: 8px 0 2px 0;\"><strong>Potential concerns:</strong></p><ul>")
+        parts.append('<p style="margin: 8px 0 2px 0;"><strong>Potential concerns:</strong></p><ul>')
         for c in scored.concerns:
             parts.append(f"<li>{escape(c)}</li>")
         parts.append("</ul>")
     if url:
-        parts.append(
-            f'<p style="margin: 8px 0;\"><a href="{escape(url)}">View job</a></p>'
-        )
+        parts.append(f'<p style="margin: 8px 0;"><a href="{escape(url)}">View job</a></p>')
     parts.append("</div>")
     return "\n".join(parts)
 
 
-def generate_text_email(
-    scored_jobs: list[ScoredJob], total_below_threshold: int = 0
-) -> str:
+def generate_text_email(scored_jobs: list[ScoredJob], total_below_threshold: int = 0) -> str:
     """Generate a plain-text alternative for the job digest email."""
     lines = ["Job Finder — Daily Digest", "=" * 40, ""]
     count = len(scored_jobs)
@@ -163,9 +149,7 @@ def send_email(
     logger.info("Email sent successfully")
 
 
-def _login_and_send(
-    server: smtplib.SMTP, config: EmailConfig, msg: MIMEMultipart
-) -> None:
+def _login_and_send(server: smtplib.SMTP, config: EmailConfig, msg: MIMEMultipart) -> None:
     """Log in (if credentials provided) and send the message."""
     if config.smtp_username and config.smtp_password:
         server.login(config.smtp_username, config.smtp_password)
