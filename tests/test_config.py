@@ -150,3 +150,30 @@ class TestConfigLoading:
         config_path = _write_config(tmp_path, data)
         config = load_config(str(config_path))
         assert config.candidate.seniority_filter is False
+
+    def test_max_years_experience(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        data = _base_config()
+        data["candidate"]["max_years_experience"] = 5
+        config_path = _write_config(tmp_path, data)
+        config = load_config(str(config_path))
+        assert config.candidate.max_years_experience == 5
+
+    def test_max_years_experience_default_none(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        config_path = _write_config(tmp_path, _base_config())
+        config = load_config(str(config_path))
+        assert config.candidate.max_years_experience is None
+
+    def test_acceptable_areas_and_strict(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        data = _base_config()
+        data["candidate"]["location"]["acceptable_areas"] = ["Surrey", "Kent"]
+        data["candidate"]["location"]["strict"] = True
+        config_path = _write_config(tmp_path, data)
+        config = load_config(str(config_path))
+        assert config.candidate.location.acceptable_areas == ["Surrey", "Kent"]
+        assert config.candidate.location.strict is True
