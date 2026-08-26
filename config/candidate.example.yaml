@@ -40,6 +40,16 @@ candidate:
     - director
     - manager
 
+  # Terms that deprioritise (but don't exclude) matching jobs. The final
+  # score is multiplied by deprioritise_factor, pushing these jobs down the
+  # ranking without removing them entirely. Useful for job categories that
+  # are somewhat relevant but not your primary focus.
+  deprioritise:
+    - consultant
+  # Score multiplier applied to deprioritised jobs (0–1). Lower = stronger
+  # deprioritisation. 0.75 reduces the score by 25%. Set to 1.0 to disable.
+  deprioritise_factor: 0.75
+
   # Set to false to disable automatic filtering of senior leadership titles
   # (director, head of, VP, chief, CTO, CIO). Useful in fields where those
   # terms appear in relevant job titles. Default: true.

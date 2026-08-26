@@ -45,6 +45,8 @@ class CandidateConfig:
     must_have_skills: list[str] = field(default_factory=list)
     desirable_skills: list[str] = field(default_factory=list)
     exclusions: list[str] = field(default_factory=list)
+    deprioritise: list[str] = field(default_factory=list)
+    deprioritise_factor: float = 0.75
     seniority_filter: bool = True
     max_years_experience: int | None = None
     cv_path: str = ""
@@ -150,6 +152,8 @@ def _build_candidate_config(raw: dict) -> CandidateConfig:
         must_have_skills=list(skills.get("must_have", [])),
         desirable_skills=list(skills.get("desirable", [])),
         exclusions=list(raw.get("exclusions", [])),
+        deprioritise=list(raw.get("deprioritise", [])),
+        deprioritise_factor=float(raw.get("deprioritise_factor", 0.75)),
         seniority_filter=bool(raw.get("seniority_filter", True)),
         max_years_experience=(
             int(raw["max_years_experience"]) if raw.get("max_years_experience") is not None else None

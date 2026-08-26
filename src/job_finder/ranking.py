@@ -8,6 +8,7 @@ from job_finder.config import CandidateConfig, MatchingConfig, MatchingWeights
 from job_finder.matching import (
     SkillMatchResult,
     extract_years_required,
+    is_deprioritised,
     is_excluded,
     is_experience_excluded,
     is_senior_excluded,
@@ -157,6 +158,9 @@ def rank_jobs(
             continue
 
         strengths, concerns = build_explanation(job, components, skill_result, candidate)
+        if is_deprioritised(job, candidate.deprioritise):
+            final *= candidate.deprioritise_factor
+            concerns.append("Job category is deprioritised (still included but ranked lower)")
         scored.append(
             ScoredJob(
                 job=job,

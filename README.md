@@ -178,6 +178,8 @@ Edit the `candidate` section in `config/config.yaml`:
 - **skills.must_have**: Skills that must appear in the job (stronger weight)
 - **skills.desirable**: Skills that improve the match score
 - **exclusions**: Terms that cause a job to be filtered out (e.g., "sales", "manager")
+- **deprioritise**: Terms that soft-penalise jobs without excluding them (e.g., "consultant")
+- **deprioritise_factor**: Score multiplier (0–1) applied to deprioritised jobs; lower = stronger penalty
 - **cv_path**: Path to your CV PDF file
 
 ### 5. Provide your CV

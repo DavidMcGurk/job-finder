@@ -32,10 +32,11 @@ jobs:
         run: uv sync
 
       - name: Restore SQLite database from cache
+        if: github.ref == 'refs/heads/main'
         uses: actions/cache@v4
         with:
           path: data/job_finder.db
-          key: job-finder-db-${{ github.run_id }}${{ github.ref != 'refs/heads/main' && '-DEV' || '' }}
+          key: job-finder-db-${{ github.run_id }}
           restore-keys: |
             job-finder-db-
 
@@ -53,8 +54,8 @@ jobs:
         run: uv run python -m job_finder
 
       - name: Save SQLite database to cache
+        if: always() && github.ref == 'refs/heads/main'
         uses: actions/cache/save@v4
-        if: always()
         with:
           path: data/job_finder.db
-          key: job-finder-db-${{ github.run_id }}${{ github.ref != 'refs/heads/main' && '-DEV' || '' }}
+          key: job-finder-db-${{ github.run_id }}

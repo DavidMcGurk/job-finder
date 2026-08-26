@@ -177,3 +177,22 @@ class TestConfigLoading:
         config = load_config(str(config_path))
         assert config.candidate.location.acceptable_areas == ["Surrey", "Kent"]
         assert config.candidate.location.strict is True
+
+    def test_deprioritise(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        data = _base_config()
+        data["candidate"]["deprioritise"] = ["consultant", "contractor"]
+        data["candidate"]["deprioritise_factor"] = 0.6
+        config_path = _write_config(tmp_path, data)
+        config = load_config(str(config_path))
+        assert config.candidate.deprioritise == ["consultant", "contractor"]
+        assert config.candidate.deprioritise_factor == 0.6
+
+    def test_deprioritise_defaults(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+        monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+        config_path = _write_config(tmp_path, _base_config())
+        config = load_config(str(config_path))
+        assert config.candidate.deprioritise == []
+        assert config.candidate.deprioritise_factor == 0.75
