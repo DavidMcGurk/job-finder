@@ -288,3 +288,80 @@ class TestRankJobs:
         assert "1" in ids  # London — city match
         assert "2" in ids  # Remote — remote match
         assert "3" not in ids  # Manchester — not acceptable, filtered out
+
+    def test_deprioritise_lowers_score_but_keeps_job(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            deprioritise=["consultant"],
+            deprioritise_factor=0.75,
+            seniority_filter=False,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [
+            _make_job(job_id="1", title="Research Scientist", description="Research role in London"),
+            _make_job(job_id="2", title="Consultant", description="Research role in London"),
+        ]
+        semantic = {"1": 0.9, "2": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 2  # both kept
+        # The deprioritised job should have a lower score
+        by_id = {s.job.id: s for s in scored}
+        assert by_id["2"].final_score < by_id["1"].final_score
+        # The deprioritised job should have a concern noting it
+        assert any("deprioritis" in c.lower() for c in by_id["2"].concerns)
+
+    def test_deprioritise_factor_one_is_noop(self) -> None:
+        # With factor 1.0, deprioritisation has no effect on score
+        candidate_with = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            deprioritise=["consultant"],
+            deprioritise_factor=1.0,
+            seniority_filter=False,
+            cv_path="",
+        )
+        candidate_without = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            deprioritise=[],
+            seniority_filter=False,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [_make_job(job_id="1", title="Consultant", description="Research role in London")]
+        semantic = {"1": 0.9}
+        scored_with = rank_jobs(jobs, candidate_with, config, semantic)
+        scored_without = rank_jobs(jobs, candidate_without, config, semantic)
+        assert scored_with[0].final_score == scored_without[0].final_score
+
+    def test_no_deprioritise_terms_no_concern(self) -> None:
+        candidate = CandidateConfig(
+            name="Test",
+            location=LocationConfig(countries=["UK"], cities=["London"], remote=True),
+            titles=["Research Scientist"],
+            must_have_skills=[],
+            desirable_skills=[],
+            exclusions=[],
+            seniority_filter=False,
+            cv_path="",
+        )
+        config = MatchingConfig(minimum_score=0.0, top_n=10)
+        jobs = [_make_job(job_id="1", title="Consultant", description="Research role in London")]
+        semantic = {"1": 0.9}
+        scored = rank_jobs(jobs, candidate, config, semantic)
+        assert len(scored) == 1
+        assert not any("deprioritis" in c.lower() for c in scored[0].concerns)

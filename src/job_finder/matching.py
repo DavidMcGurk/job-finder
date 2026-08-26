@@ -240,6 +240,15 @@ def is_senior_excluded(job: Job) -> bool:
     return False
 
 
+def is_deprioritised(job: Job, terms: list[str]) -> bool:
+    """Check whether a job matches a deprioritisation term (title only).
+
+    Uses the same matching logic as :func:`is_excluded` but does not remove
+    the job — the caller applies a score penalty instead.
+    """
+    return is_excluded(job, terms)
+
+
 def recency_score(created_at: datetime | None, max_age_days: int = 7) -> float:
     """Compute a recency score in [0, 1].
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from job_finder.matching import (
+    is_deprioritised,
     is_excluded,
     is_senior_excluded,
     is_valid_url,
@@ -183,6 +184,28 @@ class TestSeniorExclusion:
     def test_excludes_lead(self) -> None:
         job = _make_job("Lead Researcher")
         assert is_senior_excluded(job) is True
+
+
+class TestDeprioritisation:
+    def test_deprioritises_by_word(self) -> None:
+        job = _make_job("Consultant Engineer")
+        assert is_deprioritised(job, ["consultant"]) is True
+
+    def test_deprioritises_by_phrase(self) -> None:
+        job = _make_job("Sales Consultant")
+        assert is_deprioritised(job, ["sales consultant"]) is True
+
+    def test_does_not_deprioritise_unrelated(self) -> None:
+        job = _make_job("Machine Learning Engineer")
+        assert is_deprioritised(job, ["consultant"]) is False
+
+    def test_no_deprioritise_terms(self) -> None:
+        job = _make_job("Consultant")
+        assert is_deprioritised(job, []) is False
+
+    def test_case_insensitive(self) -> None:
+        job = _make_job("CONSULTANT")
+        assert is_deprioritised(job, ["consultant"]) is True
 
 
 class TestExperienceExtraction:
